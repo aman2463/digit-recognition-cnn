@@ -1,13 +1,19 @@
 import base64
 import io
+import os
 
 import numpy as np
 from flask import Flask, jsonify, render_template, request
 from PIL import Image
-from tensorflow import keras
+import tflite_runtime.interpreter as tflite
 
 app = Flask(__name__)
-model = keras.models.load_model("digit_model.keras")
+
+# Load TFLite model (much lighter than full TensorFlow)
+interpreter = tflite.Interpreter(model_path="digit_model.tflite")
+interpreter.allocate_tensors()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 
 def preprocess(data_url):
@@ -52,11 +58,13 @@ def predict():
     if arr is None:
         return jsonify(error="Draw a digit first."), 400
 
-    digit = int(np.argmax(model.predict(arr, verbose=0)[0]))
+    interpreter.set_tensor(input_details[0]["index"], arr)
+    interpreter.invoke()
+    output = interpreter.get_tensor(output_details[0]["index"])
+    digit = int(np.argmax(output[0]))
     return jsonify(digit=digit)
 
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
