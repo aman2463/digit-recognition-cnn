@@ -3,17 +3,15 @@ import io
 import os
 
 import numpy as np
+import onnxruntime as ort
 from flask import Flask, jsonify, render_template, request
 from PIL import Image
-import tflite_runtime.interpreter as tflite
 
 app = Flask(__name__)
 
-# Load TFLite model (much lighter than full TensorFlow)
-interpreter = tflite.Interpreter(model_path="digit_model.tflite")
-interpreter.allocate_tensors()
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+# Load ONNX model (lightweight, no TensorFlow needed)
+session = ort.InferenceSession("digit_model.onnx")
+input_name = session.get_inputs()[0].name
 
 
 def preprocess(data_url):
@@ -58,10 +56,8 @@ def predict():
     if arr is None:
         return jsonify(error="Draw a digit first."), 400
 
-    interpreter.set_tensor(input_details[0]["index"], arr)
-    interpreter.invoke()
-    output = interpreter.get_tensor(output_details[0]["index"])
-    digit = int(np.argmax(output[0]))
+    result = session.run(None, {input_name: arr})
+    digit = int(np.argmax(result[0][0]))
     return jsonify(digit=digit)
 
 

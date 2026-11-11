@@ -2,4 +2,4 @@ flask
 gunicorn
 pillow
 numpy
-tflite-runtime
+onnxruntime

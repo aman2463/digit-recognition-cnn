@@ -1,11 +1,28 @@
-"""Run this script in your Anaconda environment to convert the Keras model to TFLite."""
+"""Run this script in your Anaconda environment to convert the Keras model to ONNX."""
+import subprocess
+import sys
+import os
+
+# Install tf2onnx if not present
+subprocess.check_call([sys.executable, "-m", "pip", "install", "tf2onnx", "-q"])
+
 import tensorflow as tf
 
 model = tf.keras.models.load_model("digit_model.keras")
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-tflite_model = converter.convert()
 
-with open("digit_model.tflite", "wb") as f:
-    f.write(tflite_model)
+# Save as SavedModel first (avoids Keras tensor issues)
+saved_model_dir = "temp_saved_model"
+model.export(saved_model_dir)
 
-print(f"Converted! digit_model.tflite ({len(tflite_model)} bytes)")
+# Convert SavedModel to ONNX using command line
+subprocess.check_call([
+    sys.executable, "-m", "tf2onnx.convert",
+    "--saved-model", saved_model_dir,
+    "--output", "digit_model.onnx"
+])
+
+# Clean up temp folder
+import shutil
+shutil.rmtree(saved_model_dir, ignore_errors=True)
+
+print("Converted! digit_model.onnx created successfully")
