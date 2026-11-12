@@ -4,68 +4,64 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Handwritten Digit Recognition with CNN</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #060a12;
-    --panel: #0b1220;
-    --field: #0e1626;
-    --line: #1c2a3d;
-    --text: #e6edf3;
-    --muted: #8a9ab0;
-    --cyan: #22d3ee;
-    --purple: #a78bfa;
-    --error: #f87171;
+    --bg: #121212;
+    --panel: #1c1c1c;
+    --field: #232323;
+    --line: #333333;
+    --text: #eaeaea;
+    --muted: #9a9a9a;
+    --accent: #4f9cf9;
+    --error: #ff6b6b;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh;
     background: var(--bg); color: var(--text);
-    font-family: "Rajdhani", system-ui, "Segoe UI", sans-serif;
-    font-size: 16px; line-height: 1.4;
+    font-family: system-ui, "Segoe UI", Arial, sans-serif;
+    font-size: 16px; line-height: 1.5;
   }
-  .display { font-family: "Orbitron", "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+  .display { font-weight: 600; }
 
   /* Header */
-  header { border-bottom: 1px solid var(--cyan); padding: 14px clamp(16px, 3vw, 34px); display: flex; align-items: center; gap: 14px; }
-  .logo { flex: none; width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 24px;
-          background: linear-gradient(135deg, var(--cyan), var(--purple)); }
-  header h1 { margin: 0; font-size: clamp(.95rem, 2.4vw, 1.35rem); color: var(--cyan); line-height: 1.2; }
+  header { border-bottom: 1px solid var(--line); padding: 14px clamp(16px, 3vw, 34px); display: flex; align-items: center; gap: 14px; }
+  .logo { flex: none; width: 48px; height: 48px; border-radius: 10px; display: grid; place-items: center; font-size: 24px;
+          background: var(--field); border: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: clamp(1.1rem, 2.4vw, 1.5rem); font-weight: 600; color: var(--text); line-height: 1.2; }
   .meta { margin: 4px 0 0; color: var(--muted); font-size: .9rem; display: flex; flex-wrap: wrap; gap: 2px 10px; }
   .meta span + span::before { content: "|"; margin-right: 10px; color: var(--line); }
 
   /* Card */
   main { max-width: 880px; margin: 28px auto; padding: 0 16px 40px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: clamp(16px, 3vw, 26px); }
-  .card h2 { margin: 0 0 12px; font-size: 1.15rem; color: var(--cyan); }
-  .info { border-left: 3px solid var(--cyan); background: rgba(34, 211, 238, .06); padding: 10px 14px; border-radius: 0 6px 6px 0; color: var(--muted); font-size: .95rem; margin-bottom: 22px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: clamp(16px, 3vw, 26px); }
+  .card h2 { margin: 0 0 12px; font-size: 1.2rem; font-weight: 600; color: var(--text); }
+  .info { border-left: 3px solid var(--accent); background: var(--field); padding: 10px 14px; border-radius: 0 6px 6px 0; color: var(--muted); font-size: .95rem; margin-bottom: 22px; }
 
   .stage { display: flex; flex-wrap: wrap; gap: 24px; }
   .board { width: min(100%, 320px); }
-  .tag { display: block; margin: 0 0 8px; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text); }
-  canvas { display: block; width: 100%; aspect-ratio: 1 / 1; background: #000; border: 1px solid var(--line); border-radius: 10px; touch-action: none; cursor: crosshair; }
-  canvas:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+  .tag { display: block; margin: 0 0 8px; font-size: .9rem; font-weight: 600; color: var(--text); }
+  canvas { display: block; width: 100%; aspect-ratio: 1 / 1; background: #000; border: 1px solid var(--line); border-radius: 8px; touch-action: none; cursor: crosshair; }
+  canvas:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
   .actions { display: flex; gap: 10px; margin-top: 14px; }
-  button { flex: 1; font-family: "Orbitron", "Rajdhani", sans-serif; font-size: .85rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-           padding: 12px 16px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: var(--field); color: var(--text); }
+  button { flex: 1; font: inherit; font-weight: 600;
+           padding: 10px 16px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line); background: var(--field); color: var(--text); }
   button:hover { border-color: var(--muted); }
-  button.primary { border: 0; color: #04121a; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+  button.primary { border: 1px solid var(--accent); color: #fff; background: var(--accent); }
   button.primary:hover { filter: brightness(1.08); }
   button:disabled { opacity: .6; cursor: default; }
 
-  .result { flex: 1; min-width: 220px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); padding: 18px;
+  .result { flex: 1; min-width: 220px; border: 1px solid var(--line); border-radius: 8px; background: var(--field); padding: 18px;
             display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-  .result .tag { color: var(--muted); font-size: .72rem; }
-  .digit { font-family: "Orbitron", sans-serif; font-weight: 700; font-size: clamp(6rem, 20vw, 9rem); line-height: 1.1; margin: 6px 0; color: var(--cyan); }
+  .result .tag { color: var(--muted); font-size: .9rem; font-weight: 400; }
+  .digit { font-weight: 600; font-size: clamp(6rem, 20vw, 9rem); line-height: 1.1; margin: 6px 0; color: var(--accent); }
   .digit.idle { color: var(--line); }
   .error { color: var(--error); min-height: 1.4em; margin: 6px 0 0; }
 
   @media (max-width: 640px) { .meta span + span::before { content: none; } }
 
-  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 0 16px 28px; }
+  footer { text-align: center; color: var(--muted); font-size: .9rem; padding: 0 16px 28px; }
 </style>
 </head>
 <body>
