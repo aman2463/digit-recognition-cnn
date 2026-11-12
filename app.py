@@ -59,6 +59,10 @@ def predict():
     digit = int(np.argmax(result[0][0]))
     return jsonify(digit=digit)
 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+
 
 
 
