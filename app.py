@@ -47,4 +47,22 @@ def preprocess(data_url):
 def home():
     return render_template("index.html")
 
+@app.route("/predict", methods=["POST"])
+def predict():
+    payload = request.get_json(silent=True) or {}
+    image = payload.get("image")
+    arr = preprocess(image) if image else None
+    if arr is None:
+        return jsonify(error="Draw a digit first."), 400
+
+    result = session.run(None, {input_name: arr})
+    digit = int(np.argmax(result[0][0]))
+    return jsonify(digit=digit)
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
+
+
 
